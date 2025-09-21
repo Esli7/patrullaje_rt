@@ -1,0 +1,51 @@
+.gitignore
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+*.db
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# --- Entornos virtuales ---
+venv/
+.venv/
+ENV/
+env/
+env.bak/
+pip-wheel-metadata/
+
+# --- Flask ---
+instance/
+*.pid
+
+# --- Configuración / Credenciales ---
+.env
+.env.*
+*.pem
+*.crt
+*.key
+
+# --- Docker ---
+*.tar
+*.img
+*.qcow2
+docker-compose.override.yml
+
+# --- Frontend (si usas JS/Node) ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- IDE / OS ---
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
