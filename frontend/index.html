@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard · Monitoreo de Patrullajes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/dashboard.css" />
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1>Monitoreo de Patrullajes</h1>
+    <div class="spacer"></div>
+    <span>Usuario: <strong id="userEmail">—</strong></span>
+    <button id="btnLogout" type="button">Salir</button>
+  </header>
+
+  <main class="grid">
+    <section class="kpis">
+      <div class="kpi">
+        <div class="kpi__label">Patrullas</div>
+        <div class="kpi__value" id="kpiTotal">—</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__label">Activas</div>
+        <div class="kpi__value" id="kpiActivas">—</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__label">Última actualización</div>
+        <div class="kpi__value" id="kpiUltima">—</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Mapa</h2>
+      <div id="map" class="map"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Ubicaciones recientes</h2>
+      <table class="table" id="tblUbicaciones">
+        <thead>
+          <tr>
+            <th>Patrulla</th>
+            <th>Lat</th>
+            <th>Lng</th>
+            <th>Estado</th>
+            <th>Actualizado</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- Config de la API -->
+  <script>
+    window.API_BASE_URL = "http://localhost:5000";
+  </script>
+
+  <!-- Protección (auth cookie) + logout -->
+  <script type="module">
+    import { GuardController } from "./src/controllers/GuardController.js";
+    const guard = new GuardController({
+      btnLogoutSel: "#btnLogout",
+      userEmailSel: "#userEmail",
+    });
+    guard.init();
+  </script>
+
+  <!-- Dashboard -->
+  <script type="module">
+    import { DashboardController } from "./src/controllers/DashboardController.js";
+    const controller = new DashboardController();
+    controller.init();
+  </script>
+
+  <noscript>Activa JavaScript para usar el dashboard.</noscript>
+</body>
+</html>

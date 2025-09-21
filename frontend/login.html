@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Iniciar sesión Monitoreo Patrullajes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <!-- Aquí cargas los estilos -->
+  <link rel="stylesheet" href="css/login.css"/>
+</head>
+<body>
+  <main class="login-page">
+    <section class="card">
+      <header class="card__header">
+        <h1>Monitoreo de Patrullajes</h1>
+        <p class="subtitle">Accede con tus credenciales</p>
+      </header>
+
+      <!-- Tu formulario -->
+      <form id="formLogin" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="username"
+                 required placeholder="ej. patrullero1@sgaia.com"/>
+          <small class="error" data-for="email"></small>
+        </div>
+
+        <div class="field">
+          <label for="password">Contraseña</label>
+          <input id="password" name="password" type="password" autocomplete="current-password"
+                 required minlength="6" maxlength="72" placeholder="••••••••"/>
+          <small class="error" data-for="password"></small>
+        </div>
+
+        <button id="btnSubmit" type="submit" disabled>Entrar</button>
+        <p id="formMsg" class="form-msg"></p>
+      </form>
+
+      <footer class="card__footer">
+        <small>© SGAIA · PNC </small>
+      </footer>
+    </section>
+  </main>
+
+  <!-- Apunta al backend -->
+  <script>
+    window.API_BASE_URL = "http://localhost:5000";
+  </script>
+
+  <!-- JS modular -->
+  <script type="module">
+    import { LoginView } from "./src/views/LoginView.js";
+    import { AuthController } from "./src/controllers/AuthController.js";
+    const view = new LoginView({
+      form: "#formLogin",
+      email: "#email",
+      password: "#password",
+      submitBtn: "#btnSubmit",
+      fieldErrorSelector: ".error",
+      formMsg: "#formMsg",
+    });
+    const controller = new AuthController(view);
+    controller.init();
+  </script>
+</body>
+</html>
