@@ -4,7 +4,6 @@
   <meta charset="UTF-8"/>
   <title>Iniciar sesión Monitoreo Patrullajes</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <!-- Aquí cargas los estilos -->
   <link rel="stylesheet" href="css/login.css"/>
 </head>
 <body>
@@ -15,7 +14,6 @@
         <p class="subtitle">Accede con tus credenciales</p>
       </header>
 
-      <!-- Tu formulario -->
       <form id="formLogin" novalidate>
         <div class="field">
           <label for="email">Email</label>
@@ -41,15 +39,15 @@
     </section>
   </main>
 
-  <!-- Apunta al backend -->
+  <!-- API del backend (con /api) -->
   <script>
-    window.API_BASE_URL = "http://localhost:5000";
+    window.API_BASE_URL = "http://localhost:5000/api";
   </script>
 
   <!-- JS modular -->
   <script type="module">
-    import { LoginView } from "./src/views/LoginView.js";
-    import { AuthController } from "./src/controllers/AuthController.js";
+    import { LoginView } from "./src/views/LoginView.js?v=3";
+    import { AuthController } from "./src/controllers/AuthController.js?v=3";
     const view = new LoginView({
       form: "#formLogin",
       email: "#email",

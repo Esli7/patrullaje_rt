@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Patrullas · Monitoreo de Patrullajes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <!-- Reutiliza estilos -->
+  <link rel="stylesheet" href="css/dashboard.css?v=12" />
+  <link rel="stylesheet" href="css/users.css?v=8" />
+  <link rel="stylesheet" href="css/patrullas.css?v=8" />
+  <link rel="stylesheet" href="css/users.css?v=10" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>Patrullas</h1>
+    <div class="spacer"></div>
+
+    <nav class="top-actions">
+      <a class="btn btn-callout" href="index.html">Dashboard</a>
+      <button id="btnCreate" class="btn btn-callout" type="button" data-admin-only>Nueva Patrulla</button>
+    </nav>
+
+    <span class="mx-2">Usuario: <strong id="userEmail">—</strong></span>
+    <button id="btnLogout" type="button" class="btn btn-danger">Salir</button>
+  </header>
+
+  <main class="grid">
+    <section class="panel">
+      <div class="panel__header">
+        <h2>Lista de patrullas</h2>
+        <div class="panel__actions">
+          <input id="txtSearch" class="input" type="search" placeholder="Buscar por código o alias…" />
+          <select id="selPageSize" class="input">
+            <option value="10">10 por página</option>
+            <option value="20">20 por página</option>
+            <option value="50">50 por página</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table" id="tblPatrullas">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Alias</th>
+              <th>Placa</th>
+              <th>Activa</th>
+              <th>Creado</th>
+              <th style="width:140px">Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <button id="btnPrev" class="btn" disabled type="button">&laquo; Anterior</button>
+        <span id="lblPage" class="muted">Página 1</span>
+        <button id="btnNext" class="btn" disabled type="button">Siguiente &raquo;</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Crear/Editar Patrulla -->
+  <dialog id="dlgPatrulla" class="modal">
+    <form method="dialog" class="modal__content" id="frmPatrulla">
+      <h3 id="dlgTitle">Nueva Patrulla</h3>
+
+      <input type="hidden" id="fldId" />
+      <div class="grid-2">
+        <label class="field">
+          <span>Código</span>
+          <input id="fldCodigo" class="input" type="text" required autofocus />
+        </label>
+        <label class="field">
+          <span>Alias</span>
+          <input id="fldAlias" class="input" type="text" />
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Placa</span>
+        <input id="fldPlaca" class="input" type="text" />
+      </label>
+
+      <label class="chk">
+        <input id="fldActiva" type="checkbox" checked />
+        <span>Activa</span>
+      </label>
+
+      <div class="modal__actions">
+        <button type="submit" class="btn btn-accent" id="btnSave">Guardar</button>
+        <button class="btn" id="btnCancel" value="cancel">Cancelar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" hidden></div>
+
+  <script>
+    window.API_BASE_URL = "http://localhost:5000/api";
+  </script>
+
+  <!-- Protección -->
+  <script type="module">
+    import { GuardController } from "./src/controllers/GuardController.js?v=8";
+    const guard = new GuardController({
+      btnLogoutSel: "#btnLogout",
+      userEmailSel: "#userEmail",
+      requireAdmin: true,
+    });
+    guard.init();
+  </script>
+
+  <!-- Controlador Patrullas -->
+  <script type="module">
+    import { PatrullasController } from "./src/controllers/PatrullasController.js?v=2";
+    const controller = new PatrullasController();
+    controller.init();
+  </script>
+</body>
+</html>

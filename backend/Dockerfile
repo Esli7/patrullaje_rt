@@ -1,22 +1,27 @@
 FROM python:3.12-slim
 
-# Instalar dependencias del sistema necesarias para compilar extensiones
+# dependencias de sistema
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential curl && \
     rm -rf /var/lib/apt/lists/*
 
-# Directorio de trabajo
 WORKDIR /app
 
-# Copiar e instalar dependencias de Python
+# instalar requirements
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar el resto del código
+# copiar el resto del código
 COPY . .
 
-# Exponer el puerto donde corre la app
+# asegurar que Python encuentre /app
+ENV PYTHONPATH=/app
+
+# variables útiles para flask
+ENV FLASK_ENV=development
+ENV FLASK_APP=manage:app
+
 EXPOSE 5000
 
-# Comando de inicio
+# iniciar con gunicorn
 CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:5000", "manage:app"]

@@ -1,0 +1,133 @@
+/* Extiende tu tema actual */
+.panel__header{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px;
+}
+.panel__actions{ display:flex; gap:8px; align-items:center; }
+.input{
+  background:#0e1627; color:#e7eefb; border:1px solid #24324f; border-radius:10px; padding:8px 10px;
+}
+.btn{ background:#1e293b; color:#e7eefb; border:1px solid #2b3954; border-radius:10px; padding:8px 12px; cursor:pointer }
+.btn:disabled{ opacity:.6; cursor:not-allowed }
+.btn-accent{ background:var(--accent,#4cc9f0); color:#041220; border-color:#2e9ab4; }
+
+/* (opcional, útil para acciones en la tabla) */
+.btn-danger{ background:#7f1d1d; border-color:#a11f1f; }
+
+/* (opcional) grupo de botones de acciones en filas */
+.actions{ display:flex; gap:6px; }
+
+/* Tabla y paginación */
+.table-wrap{ overflow:auto; border-radius:12px; }
+.pagination{ display:flex; gap:12px; align-items:center; justify-content:flex-end; padding-top:10px; }
+.muted{ color:var(--muted,#8aa0c8); }
+.mx-2{ margin:0 8px; }
+
+/* Modal nativo */
+.modal::backdrop{ background:rgba(0,0,0,.55); }
+.modal{ border:none; border-radius:16px; padding:0; }
+.modal__content{ min-width:340px; background:var(--panel,#121a2a); border:1px solid #24324f; border-radius:16px; padding:16px; }
+.modal__actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:12px; }
+.field{ display:flex; flex-direction:column; gap:6px; margin:10px 0; }
+.chk{ display:flex; align-items:center; gap:8px; margin:8px 0; }
+
+/* ===== Fallback para navegadores/entornos sin showModal() ===== */
+dialog.modal[open] {
+  display:block;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  z-index:1000;
+  max-width:90vw;
+  background:var(--panel,#121a2a);
+  border:1px solid #24324f;
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 10px 40px rgba(0,0,0,.5);
+}
+dialog.modal[open]::before {
+  content:"";
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:-1;
+}
+
+/* Toast */
+.toast{
+  position:fixed; right:16px; bottom:16px; background:#0e1627; border:1px solid #2b3954; color:#e7eefb;
+  border-radius:12px; padding:10px 12px; box-shadow:0 10px 40px rgba(0,0,0,.25);
+}
+
+/* ================================
+   Amarillo PNC para labels del modal
+   ================================ */
+.modal .field > span,
+.modal legend {
+  color:#FFD700;
+  font-weight:600;
+}
+.modal .chk > span {
+  color:#FFD700;
+  font-weight:600;
+}
+.modal .chips .chip span,
+.modal .chips label span {
+  color:#FFD700;
+  font-weight:600;
+}
+
+/* ============= OVERRIDES ESPECÍFICOS DEL MODAL DE USUARIOS ============= */
+#dlgUser.modal .modal__content .field > span,
+#dlgUser.modal legend {
+  color:#FFD700 !important;
+  font-weight:700;
+}
+#dlgUser.modal .chk > span {
+  color:#FFD700 !important;
+  font-weight:700;
+}
+#dlgUser.modal #rolesContainer .chip span,
+#dlgUser.modal #rolesContainer label span {
+  color:#FFD700 !important;
+  font-weight:700;
+}
+#dlgUser.modal #rolesContainer.chips {
+  display:flex; gap:16px; align-items:center; flex-wrap:wrap;
+  background:#0e1627; border:1px solid #2b3954; border-radius:12px; padding:10px 12px;
+}
+#dlgUser.modal #rolesContainer .chip,
+#dlgUser.modal #rolesContainer label.chip {
+  display:inline-flex; align-items:center; gap:8px; padding:4px 10px;
+  border-radius:999px; background:rgba(139,92,246,.08); border:1px solid rgba(139,92,246,.25);
+}
+#dlgUser.modal #rolesContainer .chip input[type="checkbox"] {
+  accent-color:#FFD700;
+}
+#dlgUser.modal fieldset,
+#dlgUser.modal legend {
+  all: unset;
+  color:#FFD700 !important;
+  font-weight:700;
+  display:block;
+  margin-bottom:6px;
+}
+
+/* ============= OVERRIDES ESPECÍFICOS DEL MODAL DE PATRULLAS ============= */
+#dlgPatrulla.modal .modal__content .field > span,
+#dlgPatrulla.modal legend {
+  color:#FFD700 !important;
+  font-weight:700;
+}
+#dlgPatrulla.modal .chk > span {
+  color:#FFD700 !important;
+  font-weight:700;
+}
+#dlgPatrulla.modal fieldset,
+#dlgPatrulla.modal legend {
+  all: unset;
+  color:#FFD700 !important;
+  font-weight:700;
+  display:block;
+  margin-bottom:6px;
+}

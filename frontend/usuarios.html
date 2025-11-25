@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Usuarios · Monitoreo de Patrullajes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <!-- Estilos (reutiliza el look & feel del dashboard) -->
+  <link rel="stylesheet" href="css/dashboard.css?v=12" />
+  <link rel="stylesheet" href="css/users.css?v=8" />
+  <link rel="stylesheet" href="css/users.css?v=3" />
+
+  <!-- Mejora: evitar que el NIP se corte en dos líneas -->
+  <style>
+    #tblUsers th.nip,
+    #tblUsers td.nip {
+      white-space: nowrap;
+      word-break: keep-all;
+      overflow-wrap: normal;
+      hyphens: manual;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <h1>Usuarios</h1>
+    <div class="spacer"></div>
+
+    <nav class="top-actions">
+      <a class="btn btn-callout" href="index.html">Dashboard</a>
+      <!-- Solo admins: el GuardController ocultará si no corresponde -->
+      <button id="btnCreate" class="btn btn-callout" type="button" data-admin-only>Nuevo usuario</button>
+    </nav>
+
+    <span class="mx-2">Usuario: <strong id="userEmail">—</strong></span>
+    <button id="btnLogout" type="button" class="btn btn-danger">Salir</button>
+  </header>
+
+  <main class="grid">
+    <section class="panel">
+      <div class="panel__header">
+        <h2>Lista de usuarios</h2>
+        <div class="panel__actions">
+          <input id="txtSearch" class="input" type="search" placeholder="Buscar por email…" />
+          <select id="selPageSize" class="input">
+            <option value="10">10 por página</option>
+            <option value="20">20 por página</option>
+            <option value="50">50 por página</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table" id="tblUsers">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Email</th>
+              <th>Nombre</th><!-- NUEVO -->
+              <th class="nip">NIP</th><!-- NUEVO -->
+              <th>Rol</th>
+              <th>Activo</th>
+              <th>Creado</th>
+              <th style="width:140px">Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <button id="btnPrev" class="btn" disabled type="button">&laquo; Anterior</button>
+        <span id="lblPage" class="muted">Página 1</span>
+        <button id="btnNext" class="btn" disabled type="button">Siguiente &raquo;</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Crear/Editar -->
+  <dialog id="dlgUser" class="modal">
+    <form method="dialog" class="modal__content" id="frmUser">
+      <h3 id="dlgTitle">Nuevo usuario</h3>
+
+      <input type="hidden" id="fldId" />
+
+      <label class="field">
+        <span>Email</span>
+        <input id="fldEmail" class="input" type="email" required />
+      </label>
+
+      <!-- NUEVOS CAMPOS -->
+      <label class="field">
+        <span>Nombre</span>
+        <input id="fldNombre" class="input" type="text" maxlength="120" />
+      </label>
+
+      <label class="field">
+        <span>NIP</span>
+        <input
+          id="fldNip"
+          class="input"
+          type="text"
+          inputmode="text"
+          pattern="^[0-9]{5}-[A-Z]$"
+          title="Formato requerido: 5 dígitos, guion y una letra mayúscula (ejemplo: 52134-P)"
+          maxlength="7"
+        />
+      </label>
+      <!-- /NUEVOS CAMPOS -->
+
+      <label class="field">
+        <span>Contraseña <small class="muted" id="pwdHint">(requerida)</small></span>
+        <input id="fldPassword" class="input" type="password" minlength="6" />
+      </label>
+
+      <!-- Selector de roles (dinámico) -->
+      <fieldset class="field">
+        <legend>Roles</legend>
+        <div id="rolesContainer" class="chips">
+          <!-- Se pobla dinámicamente con /api/users/roles.
+               Fallback (si falla): usuario, patrullero, admin -->
+        </div>
+      </fieldset>
+
+      <label class="chk">
+        <input id="fldActive" type="checkbox" checked />
+        <span>Activo</span>
+      </label>
+
+      <div class="modal__actions">
+        <button type="submit" class="btn btn-accent" id="btnSave">Guardar</button>
+        <button class="btn" id="btnCancel" value="cancel">Cancelar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- API del backend (con /api) -->
+  <script>
+    // Usa el mismo host que el frontend para que el navegador envíe la cookie.
+    const apiHost = `${location.protocol}//${location.hostname}:5000`;
+    window.API_BASE_URL = `${apiHost}/api`;
+  </script>
+
+  <!-- Protección + logout (usa cookie HttpOnly, pinta email y exige rol admin en esta página) -->
+  <script type="module">
+    import { GuardController } from "./src/controllers/GuardController.js?v=8";
+    const guard = new GuardController({
+      btnLogoutSel: "#btnLogout",
+      userEmailSel: "#userEmail",
+      requireAdmin: true,   // SOLO admins pueden ver usuarios.html
+    });
+    guard.init();
+  </script>
+
+  <!-- Lógica de Usuarios: listado + CRUD + roles -->
+  <script type="module">
+    import { usersApi, rolesApi } from "./src/services/api.js?v=8";
+
+    // ====== Elementos ======
+    const tbody        = document.querySelector("#tblUsers tbody");
+    const btnPrev      = document.querySelector("#btnPrev");
+    const btnNext      = document.querySelector("#btnNext");
+    const lblPage      = document.querySelector("#lblPage");
+    const txtSearch    = document.querySelector("#txtSearch");
+    const selPageSize  = document.querySelector("#selPageSize");
+    const btnCreate    = document.querySelector("#btnCreate");
+
+    const dlg          = document.querySelector("#dlgUser");
+    const frm          = document.querySelector("#frmUser");
+    const fldId        = document.querySelector("#fldId");
+    const fldEmail     = document.querySelector("#fldEmail");
+    const fldNombre    = document.querySelector("#fldNombre");   // NUEVO
+    const fldNip       = document.querySelector("#fldNip");      // NUEVO
+    const fldPassword  = document.querySelector("#fldPassword");
+    const fldActive    = document.querySelector("#fldActive");
+    const pwdHint      = document.querySelector("#pwdHint");
+    const rolesContainer = document.querySelector("#rolesContainer");
+    const btnSave      = document.querySelector("#btnSave");
+
+    // ====== Estado ======
+    const state = {
+      page: 1,
+      size: Number(selPageSize.value || 10),
+      q: "",
+      total: 0,
+      items: [],
+    };
+
+    // ====== Helpers UI ======
+    function toast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.hidden = false;
+      setTimeout(() => (el.hidden = true), 2500);
+    }
+
+    function fmtDate(x) {
+      if (!x) return "—";
+      try { return new Date(x).toLocaleString(); } catch { return String(x); }
+    }
+
+    function rolesToLabel(u) {
+      if (Array.isArray(u.roles) && u.roles.length) return u.roles.join(", ");
+      if (u.role) return String(u.role);
+      return "—";
+    }
+
+    function renderList() {
+      const { items, page, size, total } = state;
+      tbody.innerHTML = items.map(u => `
+        <tr>
+          <td>${u.id ?? "—"}</td>
+          <td>${u.email ?? "—"}</td>
+          <td>${u.nombre ?? "—"}</td>       <!-- NUEVO -->
+          <td class="nip" title="${u.nip ?? ""}">${u.nip ?? "—"}</td>  <!-- NUEVO -->
+          <td>${rolesToLabel(u)}</td>
+          <td>${u.is_active ? "Sí" : "No"}</td>
+          <td>${fmtDate(u.created_at || u.createdAt)}</td>
+          <td class="actions">
+            <button class="btn btn-sm" data-act="view" data-id="${u.id}">Ver</button>
+            <button class="btn btn-sm" data-act="edit" data-id="${u.id}">Editar</button>
+            <button class="btn btn-sm btn-danger" data-act="del" data-id="${u.id}">Eliminar</button>
+          </td>
+        </tr>
+      `).join("");
+
+      // paginación
+      const maxPage = Math.max(1, Math.ceil(total / size));
+      btnPrev.disabled = page <= 1;
+      btnNext.disabled = page >= maxPage;
+      lblPage.textContent = `Página ${page} de ${maxPage}`;
+    }
+
+    // ====== Cargar lista ======
+    async function load() {
+      try {
+        const { page, size, q } = state;
+        const res = await usersApi.list({ page, size, q });
+        state.items = res.items ?? res.data ?? [];
+        state.total = Number(res.total ?? state.items.length) || 0;
+        renderList();
+      } catch (err) {
+        if (err?.code === 401) {
+          // sesión caducada: ir al login
+          window.location.href = "login.html";
+          return;
+        }
+        console.error("[users] load error]:", err);
+        toast(`Error cargando: ${err.message || err}`);
+        // Render vacío para no dejar la tabla congelada
+        state.items = [];
+        state.total = 0;
+        renderList();
+      }
+    }
+
+    // ====== Eventos tabla ======
+    tbody.addEventListener("click", async (e) => {
+      const btn = e.target.closest("button[data-act]");
+      if (!btn) return;
+      const act = btn.getAttribute("data-act");
+      const id  = Number(btn.getAttribute("data-id"));
+
+      if (act === "del") {
+        if (!confirm(`¿Eliminar usuario #${id}?`)) return;
+        try {
+          await usersApi.remove(id);
+          toast("Usuario eliminado");
+          if (state.items.length === 1 && state.page > 1) state.page -= 1;
+          load();
+        } catch (err) {
+          if (err?.code === 401) return (window.location.href = "login.html");
+          toast(`Error eliminando: ${err.message}`);
+        }
+        return;
+      }
+
+      // ver/editar: abrir modal
+      try {
+        const raw = await usersApi.get(id);
+        const u = raw?.user ?? raw?.data ?? raw;
+        await openModalFor(u, act === "view");
+      } catch (err) {
+        if (err?.code === 401) return (window.location.href = "login.html");
+        toast(`Error obteniendo: ${err.message}`);
+      }
+    });
+
+    btnPrev.addEventListener("click", () => {
+      if (state.page > 1) { state.page -= 1; load(); }
+    });
+
+    btnNext.addEventListener("click", () => {
+      const maxPage = Math.max(1, Math.ceil(state.total / state.size));
+      if (state.page < maxPage) { state.page += 1; load(); }
+    });
+
+    let searchTimer = null;
+    txtSearch.addEventListener("input", () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        state.q = (txtSearch.value || "").trim();
+        state.page = 1;
+        load();
+      }, 300);
+    });
+
+    selPageSize.addEventListener("change", () => {
+      state.size = Number(selPageSize.value || 10);
+      state.page = 1;
+      load();
+    });
+
+    // ====== Roles UI ======
+    async function loadRolesUI(selected = []) {
+      let roles = [];
+      try {
+        roles = await rolesApi.list(); // ["usuario", "patrullero", "admin"]
+      } catch {
+        roles = ["usuario", "patrullero", "admin"];
+      }
+      const setSel = new Set((selected || []).map(String));
+      rolesContainer.innerHTML = roles.map(rc => `
+        <label class="chip">
+          <input type="checkbox" name="roles" value="${rc}" ${setSel.has(rc) ? "checked" : ""}>
+          <span>${rc}</span>
+        </label>
+      `).join("");
+    }
+
+    // ====== Modal ======
+    btnCreate.addEventListener("click", async () => {
+      fldId.value = "";
+      fldEmail.value = "";
+      fldNombre.value = "";   // NUEVO
+      fldNip.value = "";      // NUEVO
+      fldPassword.value = "";
+      fldActive.checked = true;
+      pwdHint.textContent = "(requerida)";
+      btnSave.disabled = false;
+      fldEmail.disabled = false;
+      fldNombre.disabled = false; // NUEVO
+      fldNip.disabled = false;    // NUEVO
+      fldPassword.disabled = false;
+      fldActive.disabled = false;
+      await loadRolesUI([]);
+      dlg.showModal();
+    });
+
+    async function openModalFor(user, readOnly = false) {
+      const roles = Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : []);
+      fldId.value = user.id ?? "";
+      fldEmail.value = user.email ?? "";
+      fldNombre.value = user.nombre ?? ""; // NUEVO
+      fldNip.value = user.nip ?? "";       // NUEVO
+      fldPassword.value = "";
+      fldActive.checked = !!user.is_active;
+      pwdHint.textContent = "(opcional)";
+      await loadRolesUI(roles);
+
+      // bloqueo de solo lectura (Ver)
+      fldEmail.disabled = readOnly;
+      fldNombre.disabled = readOnly;  // NUEVO
+      fldNip.disabled = readOnly;     // NUEVO
+      fldPassword.disabled = readOnly;
+      fldActive.disabled = readOnly;
+      btnSave.disabled = readOnly;
+      dlg.showModal();
+    }
+
+    // Forzar mayúsculas y limpiar caracteres inválidos en NIP (UX)
+    fldNip.addEventListener("input", () => {
+      fldNip.value = fldNip.value.toUpperCase().replace(/[^0-9A-Z-]/g, "");
+    });
+
+    // Guardar (crear/editar)
+    frm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id        = fldId.value ? Number(fldId.value) : null;
+      const email     = fldEmail.value.trim().toLowerCase();
+      const nombre    = fldNombre.value.trim();  // NUEVO
+      const nip       = fldNip.value.trim();     // NUEVO
+      const password  = fldPassword.value;
+      const is_active = !!fldActive.checked;
+      const roles     = Array.from(frm.querySelectorAll('input[name="roles"]:checked'))
+                          .map(c => c.value);
+
+      try {
+        if (!id) {
+          if (!password) { toast("La contraseña es obligatoria"); return; }
+          await usersApi.create({ email, nombre, nip, password, is_active, roles }); // NUEVO
+          toast("Usuario creado");
+        } else {
+          const payload = { email, nombre, nip, is_active, roles }; // NUEVO
+          if (password) payload.password = password;
+          await usersApi.update(id, payload);
+          toast("Usuario actualizado");
+        }
+        dlg.close();
+        load();
+      } catch (err) {
+        if (err?.code === 401) return (window.location.href = "login.html");
+        toast(err?.message || "Error al guardar");
+      }
+    });
+
+    // ====== Inicial ======
+    await load();         // <- carga el listado al entrar
+    await loadRolesUI();  // <- precarga catálogo (para abrir más rápido el modal)
+  </script>
+
+  <noscript>Activa JavaScript para gestionar usuarios.</noscript>
+</body>
+</html>

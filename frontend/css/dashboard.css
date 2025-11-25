@@ -1,16 +1,486 @@
-:root { --bg:#0b1220; --panel:#121a2a; --muted:#8aa0c8; --accent:#4cc9f0; --ok:#22c55e; }
-*{box-sizing:border-box} body{margin:0;background:radial-gradient(1200px 700px at 50% 20%,#0f1a2d,#060b16);color:#e7eefb;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
-.topbar{display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(10,16,28,.6);backdrop-filter:blur(6px);position:sticky;top:0}
+:root { 
+  --bg:#0b1220; 
+  --panel:#121a2a; 
+  --muted:#8aa0c8; 
+  --accent:#4cc9f0; 
+  --ok:#22c55e;
+  --inactive:#334155; 
+
+  
+  --btn-bg:#1e293b;
+  --btn-border:#2b3954;
+  --btn-fg:#e7eefb;
+  --btn-hover:#24344f;
+  --btn-press:#1a2435;
+  --link:#8b5cf6;          
+  --link-hover:#a78bfa;    
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:radial-gradient(1200px 700px at 50% 20%,#0f1a2d,#060b16);
+  color:#e7eefb;
+  font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial
+}
+
+
+.topbar{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 18px;
+  background:rgba(10,16,28,.6);
+  backdrop-filter:blur(6px);
+  position:sticky;top:0;
+}
 .topbar .spacer{flex:1}
-.topbar button{background:#1e293b;color:#e7eefb;border:1px solid #2b3954;border-radius:10px;padding:8px 12px;cursor:pointer}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px}
-@media (max-width: 1000px){.grid{grid-template-columns:1fr}}
-.panel{background:rgba(18,26,42,.8);border:1px solid #24324f;border-radius:16px;padding:12px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
-.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.kpi{background:rgba(18,26,42,.8);border:1px solid #24324f;border-radius:16px;padding:16px}
+
+.topbar a,
+.topbar a.btn{
+  color:var(--link);
+  text-decoration:none;
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid transparent;
+  transition:.18s ease;
+  position:relative;
+}
+.topbar a:hover,
+.topbar a.btn:hover{
+  color:var(--link-hover);
+  text-shadow:0 0 8px rgba(167,139,250,.25);
+}
+.topbar a:focus-visible,
+.topbar a.btn:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 3px rgba(139,92,246,.25);
+}
+
+
+.topbar .top-actions a.btn,
+.topbar .top-actions .btn.btn-callout{
+  background:#facc15;
+  color:#0b1220;
+  font-weight:600;
+  border:1px solid #d4b214;
+  border-radius:12px;
+  padding:10px 16px;
+  text-shadow:none;
+  box-shadow:
+    0 6px 18px rgba(250,204,21,.18),
+    inset 0 1px 0 rgba(255,255,255,.25);
+  transition:background .2s ease, transform .1s ease, box-shadow .2s ease;
+}
+.topbar .top-actions a.btn:hover,
+.topbar .top-actions .btn.btn-callout:hover{
+  background:#fbbf24;
+  transform:translateY(-1px);
+  box-shadow:
+    0 8px 22px rgba(250,204,21,.25),
+    inset 0 1px 0 rgba(255,255,255,.3);
+}
+.topbar .top-actions a.btn:active,
+.topbar .top-actions .btn.btn-callout:active{
+  background:#f59e0b;
+  transform:translateY(1px);
+}
+.topbar .top-actions a.btn:focus-visible,
+.topbar .top-actions .btn.btn-callout:focus-visible{
+  box-shadow:
+    0 0 0 3px rgba(250,204,21,.35),
+    0 8px 24px rgba(250,204,21,.25);
+}
+
+
+.topbar .btn-danger{
+  background:#ef4444;
+  color:#fff;
+  border:1px solid #b91c1c;
+  border-radius:12px;
+  padding:10px 16px;
+  font-weight:600;
+  box-shadow:
+    0 6px 18px rgba(239,68,68,.18),
+    inset 0 1px 0 rgba(255,255,255,.15);
+  transition:background .2s ease, transform .1s ease, box-shadow .2s ease;
+}
+.topbar .btn-danger:hover{
+  background:#dc2626;
+  transform:translateY(-1px);
+  box-shadow:0 8px 22px rgba(239,68,68,.28);
+}
+.topbar .btn-danger:active{ background:#b91c1c; transform:translateY(1px); }
+.topbar .btn-danger:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 3px rgba(239,68,68,.35),
+    0 8px 24px rgba(239,68,68,.25);
+}
+
+/* Botón base */
+.topbar button{
+  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)), var(--btn-bg);
+  color:var(--btn-fg);
+  border:1px solid var(--btn-border);
+  border-radius:10px;
+  padding:8px 12px;
+  cursor:pointer;
+  transition:transform .06s ease, filter .15s ease, box-shadow .2s ease, background .2s ease;
+  box-shadow:0 4px 18px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.04);
+}
+.topbar button:hover{
+  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)), var(--btn-hover);
+  filter:brightness(1.02);
+}
+.topbar button:active{ background:var(--btn-press); transform:translateY(1px); }
+.topbar button:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 3px rgba(76,201,240,.25), 0 8px 24px rgba(0,0,0,.35);
+}
+
+/* Pastilla del rol */
+.topbar small{
+  color:#cfe0ff;
+  background:rgba(139,92,246,.08);
+  border:1px solid rgba(139,92,246,.25);
+  padding:2px 8px;
+  border-radius:999px;
+  font-size:.85rem;
+  margin-left:6px;
+}
+
+/* Email resaltado */
+.topbar strong{ color:#ffffff; text-shadow:0 0 10px rgba(255,255,255,.15); }
+
+/* ===== Layout general ===== */
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  padding:16px;
+  /* evita que la columna de KPIs se estire como el mapa */
+  align-items:start;
+}
+@media (max-width: 1000px){ .grid{grid-template-columns:1fr} }
+
+.panel{
+  background:rgba(18,26,42,.8);
+  border:1px solid #24324f;
+  border-radius:16px;
+  padding:12px;
+  box-shadow:0 10px 40px rgba(0,0,0,.25)
+}
+
+/* === KPIs: TIRA COMPACTA PEGADA A LA IZQUIERDA === */
+.kpis{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  align-self:start;
+  width:fit-content;
+  align-items:center;
+}
+@supports not (width: fit-content){
+  .kpis{ width:auto; }
+}
+
+/* Card KPI base */
+.kpi{
+  background:rgba(18,26,42,.8);
+  border:1px solid #24324f;
+  border-radius:16px;
+  padding:16px;
+  height:auto;
+}
 .kpi__label{font-size:.85rem;color:var(--muted)}
 .kpi__value{font-size:1.6rem;font-weight:700}
+
+/* === Chips compactos (Patrullas, Activas) === */
+.kpi--chip{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:12px;
+  min-height:auto;
+  align-self:start;
+  justify-self:start;
+  width:max-content;
+}
+.kpi--chip .kpi__label{ font-size:.78rem; color:var(--muted); }
+.kpi--chip .kpi__value{ font-size:1.25rem; font-weight:800; line-height:1; }
+
+@media (max-width: 520px){
+  .kpi--chip .kpi__value{ font-size:1.1rem; }
+}
+
+/* ===== Mapa y tablas ===== */
 .map{height:440px;border-radius:12px;overflow:hidden}
 .table{width:100%;border-collapse:collapse}
-.table th,.table td{padding:8px 10px;border-bottom:1px solid #22314c}
+
+/* tabla */
+.table th,
+.table td{
+  padding:8px 10px;
+  border-bottom:1px solid #22314c;
+}
 .table tbody tr:hover{background:#0f1c31}
+
+/* ===== Botones globales ===== */
+.btn{
+  background:#1e293b;
+  color:#e7eefb;
+  border:1px solid #2b3954;
+  border-radius:12px;
+  padding:8px 12px;
+  font-size:14px;
+  cursor:pointer;
+  transition:filter .18s ease, transform .02s ease;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+}
+.btn:hover{ filter:brightness(1.05) }
+.btn:active{ transform:translateY(1px) }
+.btn[disabled]{ opacity:.6; cursor:not-allowed }
+
+.btn-small{ padding:6px 10px; font-size:.9rem; border-radius:10px; }
+
+.btn-accent{
+  background:var(--accent);
+  color:#0b1020;
+  border-color:#22b8e0;
+}
+
+/* Botón rojo genérico (ej: “Eliminar” en tablas) */
+.btn-danger{
+  background:#b91c1c;
+  border-color:#7f1d1d;
+  color:#fff;
+}
+.btn-danger:hover{ filter:brightness(1.07) }
+
+/* espaciado entre botones en tablas/paneles */
+.table .btn + .btn,
+.panel .btn + .btn { margin-left:6px }
+
+/* ===== Estilo donut KPI ===== */
+#donutActivas {
+  max-width: 140px;
+  max-height: 140px;
+  margin: 0 auto;
+}
+
+/* ===== “Última actualización” base (compat) ===== */
+.lastupdate{
+  margin-right:16px;
+  color:var(--muted);
+  font-size:.9rem;
+  white-space:nowrap;
+}
+.lastupdate strong{
+  color:#e7eefb;
+  font-weight:700;
+}
+
+/* Utilidad para ocultar visualmente pero mantener en el DOM (para JS) */
+.sr-only{
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0,0,0,0);
+  white-space:nowrap;
+  border:0;
+}
+
+/* Opcional: oculta el timestamp en móvil si no cabe cómodo */
+@media (max-width: 700px){
+  .lastupdate{ display:none; }
+}
+
+/* ======== REALCE ESTÉTICO PARA “Última actualización” ======== */
+.lastupdate{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  border-radius:12px;
+  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)),
+             rgba(18,26,42,.55);
+  border:1px solid #2b3954;
+  box-shadow:
+    0 6px 20px rgba(0,0,0,.25),
+    inset 0 1px 0 rgba(255,255,255,.05);
+}
+.lastupdate::before{
+  content:"";
+  width:8px;height:8px;border-radius:50%;
+  background:var(--ok);
+  box-shadow:0 0 10px rgba(34,197,94,.55);
+}
+.lastupdate strong{
+  color:#e7eefb;
+  text-shadow:0 0 8px rgba(139,92,246,.15);
+}
+.lastupdate:hover{
+  filter:brightness(1.04);
+  border-color:#314369;
+}
+
+
+.map-wrap{
+  position:relative;
+  border-radius:12px;
+  overflow:hidden; 
+}
+
+
+.map-btn{
+  position:absolute;
+  top:10px;
+  right:10px;
+  z-index:500; 
+  width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:10px;
+  border:1px solid #2b3954;
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)),
+             rgba(18,26,42,.75);
+  color:#e7eefb;
+  cursor:pointer;
+  box-shadow:0 8px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
+  backdrop-filter:blur(2px);
+  transition:filter .18s ease, transform .06s ease, box-shadow .2s ease;
+}
+.map-btn:hover{ filter:brightness(1.05); }
+.map-btn:active{ transform:translateY(1px); }
+
+/* Estado pantalla completa por clase */
+.map--fullscreen{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  margin:0;
+  border-radius:0;
+  background:var(--bg);
+}
+.map--fullscreen .map{ height:100vh; }
+.map--fullscreen .map-btn{ top:16px; right:16px; }
+
+
+.map--fullscreen .leaflet-top.leaflet-left{
+  margin-top:56px; 
+}
+
+
+.map-wrap:fullscreen{ width:100vw; height:100vh; }
+.map-wrap:fullscreen .map{ height:100vh; }
+
+
+@media (max-width: 700px){
+  .map{ height:360px; }
+}
+
+
+.map-btn{
+  top: auto;
+  right: 10px;
+  bottom: 10px;
+  z-index: 1200;         
+}
+.map--fullscreen .map-btn{
+  top: auto;
+  right: 16px;
+  bottom: 16px;
+}
+
+/* ========= NUEVO: Logos del encabezado (título + marcas) ========= */
+.topbar .brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin:0;           /* que el h1 no agregue margen vertical extra */
+}
+.topbar .brand .logo{
+  height:32px;
+  width:auto;
+  display:block;
+  filter:none;        /* asegura color real del SVG */
+}
+@media (max-width:720px){
+  .topbar .brand .logo{ height:26px; }
+}
+
+/* ========= NUEVO: Badges/Logos a la derecha del título =========
+   Usa <div class="org-badges">
+         <a class="org-badge" href="#"><img src="img/pnc.svg" alt="PNC"><span class="label">PNC</span></a>
+         <a class="org-badge" href="#"><img src="img/sgaia.svg" alt="SGAIA"><span class="label">SGAIA</span></a>
+       </div>
+   (este bloque no rompe lo existente y solo aplica si lo agregas al HTML)
+================================================================= */
+.topbar .org-badges{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-left:8px;
+}
+
+.topbar .org-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:4px 10px;
+  border-radius:12px;
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)),
+             rgba(18,26,42,.65);
+  border:1px solid #2b3954;
+  box-shadow:0 8px 24px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.05);
+  text-decoration:none;
+  color:#e7eefb;
+  line-height:1;
+  transition:transform .06s ease, filter .18s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.topbar .org-badge:hover{
+  filter:brightness(1.06);
+  transform:translateY(-1px);
+  box-shadow:0 10px 28px rgba(0,0,0,.32);
+}
+
+.topbar .org-badge:active{ transform:translateY(0); }
+
+.topbar .org-badge:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 3px rgba(76,201,240,.28), 0 8px 24px rgba(0,0,0,.35);
+}
+
+/* — Imagen más grande y nítida — */
+.topbar .org-badge img{
+  height:28px;      /* tamaño principal (más grande) */
+  width:auto;
+  display:block;
+  border-radius:6px;
+}
+
+/* Etiqueta al lado del logo */
+.topbar .org-badge .label{
+  font-size:.9rem;
+  color:#e7eefb;
+  opacity:.95;
+}
+
+/* Responsivo: ajusta tamaños con suavidad */
+@media (max-width:1100px){
+  .topbar .org-badge img{ height:26px; }
+  .topbar .org-badge .label{ font-size:.85rem; }
+}
+@media (max-width:900px){
+  .topbar .org-badge{ padding:4px 8px; gap:8px; }
+  .topbar .org-badge img{ height:24px; }
+}
+@media (max-width:720px){
+  .topbar .org-badge .label{ display:none; }  /* solo iconos en pantallas pequeñas */
+  .topbar .org-badge img{ height:22px; }
+}
+@media (max-width:480px){
+  .topbar .org-badge img{ height:20px; }
+}

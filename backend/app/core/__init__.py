@@ -1,4 +1,4 @@
-# backend/app/core/__init__.py
+
 import os
 from datetime import timedelta
 from flask import Flask
@@ -11,11 +11,35 @@ from app.views.api import api_bp
 from app.views.web import web_bp
 
 
+def configure_cors(app, origins):
+    """
+    Helper recomendado: aplica CORS SOLO a /api/*, con credenciales y headers típicos.
+    Úsalo desde app/__init__.py para no mezclar responsabilidades.
+    """
+    CORS(
+        app,
+        resources={
+            r"/api/*": {
+                "origins": origins,
+                "supports_credentials": True,
+                "allow_headers": ["Content-Type", "Authorization"],
+                "expose_headers": ["Content-Type"],
+                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                "send_wildcard": False,
+                "vary_header": True,
+                "max_age": 86400,
+                "always_send": True,
+            }
+        },
+    )
+
+
+
 def create_app():
     app = Flask(__name__)
     app.secret_key = Settings.SECRET_KEY
 
-    # === CORS ===
+    
     FRONTEND_ORIGINS = "http://localhost:3000,http://localhost:8080"
     origins_csv = os.getenv("FRONTEND_ORIGINS", FRONTEND_ORIGINS)
     origins = [o.strip() for o in origins_csv.split(",") if o.strip()]
@@ -56,3 +80,6 @@ def create_app():
     app.register_blueprint(web_bp)  # vistas web
 
     return app
+
+
+__all__ = ["configure_cors", "create_app"]

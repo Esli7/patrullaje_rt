@@ -1,3 +1,4 @@
+# backend/app/views/web.py
 from flask import Blueprint
 
 # Blueprint “web” simple para que la app arranque

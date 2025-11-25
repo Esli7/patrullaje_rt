@@ -1,4 +1,25 @@
 services:
+  # --- Base de datos (nuevo) ---
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: patrol_db        # <- coincide con tu .env (DB_HOST=patrol_db)
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: patrol_user
+      POSTGRES_PASSWORD: supersegura
+      POSTGRES_DB: patrullaje_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U patrol_user -d patrullaje_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - patrol_net
+
   backend:
     build: ./backend
     # (opcional) mejor sin container_name para evitar choques
@@ -9,7 +30,28 @@ services:
       - "5000:5000"
     networks:
       - patrol_net
+    depends_on:
+      db:
+        condition: service_healthy   # espera a que la DB esté lista
+
+  # --- Frontend estático con Nginx (como tenías) ---
+  frontend:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "8080:80"              # Servirá tu index.html en http://localhost:8080
+    volumes:
+      # Si tu HTML/JS está en ./frontend, deja esta ruta;
+      # si usas build (Vite/React) en ./frontend/dist, cambia la ruta a ./frontend/dist
+      - ./frontend:/usr/share/nginx/html:ro
+    networks:
+      - patrol_net
+    depends_on:
+      - backend
 
 networks:
   patrol_net:
     external: true
+
+volumes:
+  dbdata:

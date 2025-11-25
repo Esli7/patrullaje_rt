@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Mapa · Patrullajes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        crossorigin=""/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <style>
+    /* por si no tienes estilos: que el mapa ocupe toda la pantalla */
+    html, body { height: 100%; margin: 0; }
+    #map { position: absolute; top: 56px; left: 0; right: 0; bottom: 0; }
+    #toolbar {
+      position: fixed; top: 0; left: 0; right: 0;
+      display: flex; gap: .75rem; align-items: center;
+      padding: .5rem .75rem; background: #fff; z-index: 1000;
+      border-bottom: 1px solid #ddd;
+      flex-wrap: wrap;
+    }
+    #toolbar label { display: inline-flex; align-items: center; gap: .35rem; }
+    #toolbar input[type="number"], #toolbar input[type="datetime-local"] {
+      padding: .25rem .4rem;
+    }
+    #btnLoad { padding: .35rem .7rem; }
+  </style>
+</head>
+<body>
+  <div id="toolbar">
+    <label>Patrulla: <input id="patrullaId" type="number" placeholder="(todas)"></label>
+    <label>Desde: <input id="desde" type="datetime-local"></label>
+    <label>Hasta: <input id="hasta" type="datetime-local"></label>
+    <label><input id="useBbox" type="checkbox"> Usar vista actual</label>
+    <button id="btnLoad">Cargar</button>
+  </div>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    // --- mapa base
+    const map = L.map('map').setView([14.6132, -90.5351], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OSM'}).addTo(map);
+
+    // --- helpers de render
+    const colors = {}, layerGroup = L.layerGroup().addTo(map);
+    const palette = ['#e6194B','#3cb44b','#ffe119','#0082c8','#f58231','#911eb4','#46f0f0','#f032e6'];
+    const colorFor = id => colors[id] || (colors[id] = palette[Object.keys(colors).length % palette.length]);
+
+    // Normaliza un datetime-local a ISO UTC (lo que espera el backend)
+    const toIsoOrNull = (value) => {
+      if (!value) return null;
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? null : d.toISOString();
+    };
+
+    async function loadData(){
+      try {
+        const pid   = (document.getElementById('patrullaId').value || '').trim();
+        const desde = toIsoOrNull(document.getElementById('desde').value);
+        const hasta = toIsoOrNull(document.getElementById('hasta').value);
+        const useBbox = document.getElementById('useBbox').checked;
+
+        const qs = new URLSearchParams();
+        if (pid)   qs.set('patrulla_id', pid);
+        if (desde) qs.set('desde', desde);
+        if (hasta) qs.set('hasta', hasta);
+
+        if (useBbox) {
+          const b = map.getBounds(); // latlng
+          const minLat = b.getSouth(), maxLat = b.getNorth();
+          const minLng = b.getWest(),  maxLng = b.getEast();
+          qs.set('bbox', `${minLng},${minLat},${maxLng},${maxLat}`);
+        }
+
+        // IMPORTANTE: usar el endpoint GeoJSON correcto
+        const res = await fetch(`/api/ubicaciones/geo?${qs.toString()}`);
+        if (!res.ok) {
+          const msg = await res.text().catch(()=>'');
+          throw new Error(`HTTP ${res.status} ${res.statusText} ${msg}`);
+        }
+        const fc = await res.json();
+
+        // tolerante si no viene FC estándar
+        const features = Array.isArray(fc?.features) ? fc.features : [];
+        layerGroup.clearLayers();
+
+        if (!features.length) {
+          // si no hay features, intenta ajustar a "lista" (fallback) para no romper nada
+          if (Array.isArray(fc)) {
+            fc.forEach(it => {
+              if (it && typeof it === 'object') {
+                const lat = it.lat ?? it.latitude ?? it.y ?? it.latitud;
+                const lng = it.lng ?? it.lon ?? it.longitude ?? it.x ?? it.longitud;
+                if (lat != null && lng != null) {
+                  L.circleMarker([+lat, +lng], { radius: 5, color: '#444' })
+                    .bindPopup(`ID: ${it.id ?? '—'}<br>${it.nombre ?? ''}`)
+                    .addTo(layerGroup);
+                }
+              }
+            });
+          }
+          return;
+        }
+
+        // Agrupar por patrulla_id (puede venir null actualmente)
+        const byPatrulla = new Map();
+        for (const f of features) {
+          const pid = f?.properties?.patrulla_id ?? '—';
+          if (!byPatrulla.has(pid)) byPatrulla.set(pid, []);
+          byPatrulla.get(pid).push(f);
+        }
+
+        byPatrulla.forEach((features, pid) => {
+          const coords = [];
+          features.forEach(f => {
+            const [lon, lat] = f?.geometry?.coordinates || [];
+            if (lat == null || lon == null) return;
+            coords.push([lat, lon]);
+            const battery = f?.properties?.battery_pct ?? '—';
+            const ts = f?.properties?.ts ?? '';
+            L.circleMarker([lat, lon], { radius: 5, color: colorFor(pid) })
+              .bindPopup(`Patrulla ${pid}<br>Batería: ${battery}%<br>${ts}`)
+              .addTo(layerGroup);
+          });
+          if (coords.length >= 2) {
+            L.polyline(coords, { color: colorFor(pid), weight: 3 }).addTo(layerGroup);
+          }
+        });
+
+        if (features.length) {
+          const b = L.geoJSON({ type: 'FeatureCollection', features }).getBounds();
+          map.fitBounds(b, { padding: [20, 20] });
+        }
+      } catch (err) {
+        console.error(err);
+        alert(`Error al cargar ubicaciones: ${err.message || err}`);
+      }
+    }
+
+    // UI
+    document.getElementById('btnLoad').addEventListener('click', loadData);
+
+    // Defaults: último día, ajustado a tz local para el input datetime-local
+    const now = new Date();
+    const y   = new Date(now.getTime() - 24*60*60*1000);
+    const toLocalInput = (d) => new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0,16);
+    document.getElementById('desde').value = toLocalInput(y);
+    document.getElementById('hasta').value = toLocalInput(now);
+
+    // primer render
+    loadData();
+  </script>
+</body>
+</html>

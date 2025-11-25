@@ -1,11 +1,20 @@
-cat > frontend/css/login.css <<'EOF'
 :root{
   --bg:#0b1020; --card:#111827; --border:#243042;
   --text:#e5e7eb; --sub:#94a3b8; --accent:#22d3ee; --danger:#fca5a5;
+
+  /* Color del texto placeholder dentro de los inputs */
+  --placeholder:#f8fafc;         /* blanco suave */
+  /* Para usar amarillo, comenta la línea de arriba y descomenta la de abajo */
+  /* --placeholder:#facc15; */    /* amarillo */
 }
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:radial-gradient(1200px 700px at 80% -10%, #12203a 0%, #0b1020 55%, #070b17 100%); color:var(--text); font-family:system-ui,Segoe UI,Arial}
+body{
+  margin:0;
+  background:radial-gradient(1200px 700px at 80% -10%, #12203a 0%, #0b1020 55%, #070b17 100%);
+  color:var(--text);
+  font-family:system-ui,Segoe UI,Arial
+}
 .login-page{min-height:100%; display:grid; place-items:center; padding:24px}
 .card{
   width:min(440px, 92vw);
@@ -19,20 +28,44 @@ body{margin:0;background:radial-gradient(1200px 700px at 80% -10%, #12203a 0%, #
 .subtitle{margin:0; color:var(--sub); font-size:13px}
 form{display:flex; flex-direction:column; gap:12px; margin-top:10px}
 .field{display:flex; flex-direction:column; gap:6px}
+
+/* Labels (no se tocan los colores de Email/Contraseña) */
 label{font-size:13px; color:#cbd5e1}
+
+/* Inputs */
 input{
   background:#0f172a; color:var(--text);
   border:1px solid var(--border); border-radius:12px;
   padding:12px 12px; font-size:14px; outline:none;
+  caret-color: var(--text);
 }
 input:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+
+/* Placeholder en todos los navegadores */
+input::placeholder{ color:var(--placeholder); opacity:1 }
+input::-webkit-input-placeholder{ color:var(--placeholder) }
+input:-ms-input-placeholder{ color:var(--placeholder) }
+input::-ms-input-placeholder{ color:var(--placeholder) }
+
+/* Autofill (Chrome/Safari) para que no cambie el color/fondo del texto */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus{
+  -webkit-text-fill-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
+  box-shadow: 0 0 0px 1000px #0f172a inset !important; /* igual al fondo del input */
+  border-color: var(--border);
+}
+
+/* Botón */
 button[type=submit]{
   margin-top:4px; background:var(--accent); color:#0b1020;
   border:none; border-radius:12px; padding:12px 14px; font-weight:800; cursor:pointer; font-size:14px;
 }
 button[disabled]{opacity:.6; cursor:not-allowed}
 button:not([disabled]):hover{filter:brightness(1.05)}
+
+/* Errores y mensajes */
 .error{min-height:16px; color:var(--danger); font-size:12px}
 .form-msg{min-height:18px; text-align:center; font-size:13px}
 .card__footer{margin-top:12px; text-align:center; color:var(--sub); font-size:12px}
-EOF
